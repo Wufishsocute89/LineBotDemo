@@ -33,7 +33,7 @@ async function handleEvent(event) {
             if (event.message.type === "text") {
                 const userMessage = event.message.text;
                 const response = await ai.models.generateContent({
-                    model:"gemini-3.8-flash",
+                    model:"gemini-3.7-flash",
                     contents:userMessage
                 })
                 replyMessage = response.text;
@@ -48,7 +48,7 @@ async function handleEvent(event) {
                 const imageBuffer = Buffer.concat(chunks);
                 const base64Image = imageBuffer.toString("base64");
                 const response = ai.models.generateContent({
-                    model:"gemini-3.8-flash",
+                    model:"gemini-3.7-flash",
                     contents:[{
                         inlineData:{
                             data:base64Image,
@@ -58,6 +58,7 @@ async function handleEvent(event) {
                 });
                 replyText = response.text;
             }
+            else return null;
         } catch (err) {
             console.error("Gemini API Wrong:",err);
         }
@@ -70,9 +71,6 @@ async function handleEvent(event) {
         } catch(err) {
             console.error("Reply False:",err)
         }
-    }
-    else if (event.type == "image") {
-
     }
 }
 
