@@ -21,31 +21,58 @@ app.post("/webhook", line.middleware(config), (req, res) => {
 });
 
 const client = new line.messagingApi.MessagingApiClient(config);
-async function handleEvent(event) {
-    if (event.type !== "message" || event.message.type !== "text") {
-        return null;
-    }
-    const userMessage = event.message.text;
-    console.log(`收到使用者訊息：${userMessage}`);
-    
-    let replyText = '發生了一點錯誤，請稍後再試！';
-    try {
-        const response = await ai.models.generateContent({
-            model:"gemini-3.6-flash",
-            contents:userMessage
-        })
-        replyText = response.text;
-    } catch (err) {
-        console.error("Gemini API Wrong:",err);
-    }
+const blobClient = new line.messagingApi.MessagingApiBlobClient(config);
 
-    try {
-        await client.replyMessage({
-            replyToken: event.replyToken,
-            messages:[{type:"text",text:replyText}]
-        })
-    } catch(err) {
-        console.error("Reply False:",err)
+async function handleEvent(event) {
+    if (event.type == "message") {
+        const userMessage = event.message.text;
+        console.log(`收到使用者訊息：${userMessage}`);
+        
+        let replyText = '發生了一點錯誤，請稍後再試！';
+        try {
+            if (event.message.type === "text") {
+                const userMessage = event.message.text;
+                const response = await ai.models.generateContent({
+                    model:"gemini-3.8-flash",
+                    contents:userMessage
+                })
+                replyMessage = response.text;
+            }
+            else if (event.message.type === "image") {
+                const messageId = event.message.id;
+                const stream = await blobClient.getMessageContent(messageId);
+                const chunks = [];
+                for await (const chunk of stream) {
+                    chunks.push(chunk);
+                }
+                const imageBuffer = Buffer.concat(chunks);
+                const base64Image = imageBuffer.toString("base64");
+                const response = ai.models.generateContent({
+                    model:"gemini-3.8-flash",
+                    contents:[{
+                        inlineData:{
+                            data:base64Image,
+                            mimeType:"image/jpeg"
+                        }
+                    },"給出一段摘要並簡短描述圖片內容"]
+                });
+                replyText = response.text;
+            }
+        } catch (err) {
+            console.error("Gemini API Wrong:",err);
+        }
+
+        try {
+            await client.replyMessage({
+                replyToken: event.replyToken,
+                messages:[{type:"text",text:replyText}]
+            })
+        } catch(err) {
+            console.error("Reply False:",err)
+        }
+    }
+    else if (event.type == "image") {
+
     }
 }
 
