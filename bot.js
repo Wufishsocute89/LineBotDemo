@@ -1,15 +1,12 @@
 const express = require("express");
 const line = require("@line/bot-sdk");
-const Openai = require("openai");
-const { APIKeys } = require("openai/resources/admin/organization/projects/api-keys.js");
+const {GoogleGenAI} = require("@google/genai");
 
 const config = {
     channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
     channelSecret: process.env.CHANNEL_SECRET
 };
-const openai = new Openai({
-    apiKey:process.env.OPENAI_API_KEY
-})
+const ai = new GoogleGenAI();
 
 const app = express();
 
@@ -33,16 +30,13 @@ async function handleEvent(event) {
     
     let replyText = '發生了一點錯誤，請稍後再試！';
     try {
-        const completion = await openai.chat.completion.create({
-            model: "gpt-4o-mini",
-            messages:[
-                { role: 'system', content: '你是一個傲嬌且會拐彎抹角關心人的 AI 助理。' },
-                { role: 'user', content: userMessage }
-            ]
+        const response = await ai.models.generateContent({
+            model:"gemini-2.5-flash",
+            contents:userMessage
         })
-        replyText = completion.choices[0].message.content;
-    } catch (error) {
-        console.error("error404");
+        replyText = response.text;
+    } catch (err) {
+        console.error("Gemini API Wrong:",err);
     }
 
     try {

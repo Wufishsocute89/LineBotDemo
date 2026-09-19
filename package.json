@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Wufishsocute89/LineBotDemo#readme",
   "dependencies": {
+    "@google/genai": "^2.23.0",
     "@line/bot-sdk": "^11.2.0",
     "express": "^5.2.1",
     "openai": "^7.19.0"
