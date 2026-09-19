@@ -17,5 +17,9 @@
   "bugs": {
     "url": "https://github.com/Wufishsocute89/LineBotDemo/issues"
   },
-  "homepage": "https://github.com/Wufishsocute89/LineBotDemo#readme"
+  "homepage": "https://github.com/Wufishsocute89/LineBotDemo#readme",
+  "dependencies": {
+    "@line/bot-sdk": "^11.2.0",
+    "express": "^5.2.1"
+  }
 }
