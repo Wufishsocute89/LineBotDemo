@@ -6,8 +6,8 @@ const config = {
     channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
     channelSecret: process.env.CHANNEL_SECRET
 };
-const ai = new GoogleGenAI();
 
+const ai = new GoogleGenAI();
 const app = express();
 
 app.post("/webhook", line.middleware(config), (req, res) => {
@@ -21,44 +21,21 @@ app.post("/webhook", line.middleware(config), (req, res) => {
 });
 
 const client = new line.messagingApi.MessagingApiClient(config);
-const blobClient = new line.messagingApi.MessagingApiBlobClient(config);
-
+const blob = new line.messagingApi.MessagingApiBlobClient(config);
 async function handleEvent(event) {
     if (event.type == "message") {
-        const userMessage = event.message.text;
-        console.log(`收到使用者訊息：${userMessage}`);
+        const userId = event.source.userId;
+        console.log(`收到使用者ID:${userId}`);
         
         let replyText = '發生了一點錯誤，請稍後再試！';
         try {
-            if (event.message.type === "text") {
+            if (event.message.type == "text") {
                 const userMessage = event.message.text;
                 const response = await ai.models.generateContent({
-                    model:"gemini-3.7-flash",
+                    model:"gemini-2.5-flash",
                     contents:userMessage
                 })
-                replyMessage = response.text;
             }
-            else if (event.message.type === "image") {
-                const messageId = event.message.id;
-                const stream = await blobClient.getMessageContent(messageId);
-                const chunks = [];
-                for await (const chunk of stream) {
-                    chunks.push(chunk);
-                }
-                const imageBuffer = Buffer.concat(chunks);
-                const base64Image = imageBuffer.toString("base64");
-                const response = ai.models.generateContent({
-                    model:"gemini-3.7-flash",
-                    contents:[{
-                        inlineData:{
-                            data:base64Image,
-                            mimeType:"image/jpeg"
-                        }
-                    },"給出一段摘要並簡短描述圖片內容"]
-                });
-                replyText = response.text;
-            }
-            else return null;
         } catch (err) {
             console.error("Gemini API Wrong:",err);
         }
